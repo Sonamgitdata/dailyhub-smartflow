@@ -1,16 +1,12 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { AuroraBackdrop } from "@/components/AuroraBackdrop";
-import {
-  maskCard,
-  useAuth,
-  type PaymentMethod,
-} from "@/lib/auth";
+import { maskCard, useAuth, type PaymentMethod } from "@/lib/auth";
 
 type Step = "account" | "payment" | "done";
 
 export function OnboardingGate({ children }: { children: React.ReactNode }) {
-  const { user, ready, signIn, addMethods } = useAuth();
+  const { user, ready } = useAuth();
 
   if (!ready) {
     return (
@@ -20,10 +16,9 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Existing user with at least one method → straight to app.
   if (user && user.methods.length > 0) return <>{children}</>;
 
-  return <OnboardingFlow startAt={user ? "payment" : "account"} onDone={() => undefined}>{children}</OnboardingFlow>;
+  return <OnboardingFlow startAt={user ? "payment" : "account"}>{children}</OnboardingFlow>;
 }
 
 function OnboardingFlow({
@@ -31,7 +26,6 @@ function OnboardingFlow({
   children,
 }: {
   startAt: Step;
-  onDone: () => void;
   children: React.ReactNode;
 }) {
   const { signIn, addMethods, user } = useAuth();
