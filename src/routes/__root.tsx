@@ -4,19 +4,19 @@ import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 relative z-10">
-      <div className="max-w-md text-center glass rounded-3xl p-10">
-        <h1 className="text-7xl font-bold text-aurora">404</h1>
-        <h2 className="mt-4 text-xl font-semibold">Page not found</h2>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="max-w-md text-center">
+        <h1 className="text-7xl font-bold text-foreground">404</h1>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          That page drifted into the aurora.
+          The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-full gradient-aurora px-6 py-3 text-sm font-semibold text-primary-foreground glow-mint hover:scale-105 transition-transform"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Back to DailyHub
+            Go home
           </Link>
         </div>
       </div>
@@ -29,35 +29,20 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "DailyHub — One App, All Services, Smart Living" },
-      {
-        name: "description",
-        content:
-          "DailyHub unifies transport, food, healthcare, home services and payments into a single AI-powered dashboard.",
-      },
-      { name: "author", content: "DailyHub" },
-      { property: "og:title", content: "DailyHub — One App, All Services" },
-      {
-        property: "og:description",
-        content: "AI-powered super app for everyday life.",
-      },
+      { title: "dailyhub" },
+      { name: "description", content: "Daily Hub is a unified smart service platform integrating transport, food, healthcare, home services, and payments into one dashboard." },
+      { name: "author", content: "Lovable" },
+      { property: "og:title", content: "dailyhub" },
+      { property: "og:description", content: "Daily Hub is a unified smart service platform integrating transport, food, healthcare, home services, and payments into one dashboard." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "dailyhub" },
+      { name: "twitter:description", content: "Daily Hub is a unified smart service platform integrating transport, food, healthcare, home services, and payments into one dashboard." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0e44e043-da3f-4698-999b-cbf1f9aece90/id-preview-226a187d--33333b4b-c8aa-42d2-a6e4-c9def263eaee.lovable.app-1776436889009.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0e44e043-da3f-4698-999b-cbf1f9aece90/id-preview-226a187d--33333b4b-c8aa-42d2-a6e4-c9def263eaee.lovable.app-1776436889009.png" },
     ],
     links: [
-      {
-        rel: "preconnect",
-        href: "https://fonts.googleapis.com",
-      },
-      {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossOrigin: "anonymous",
-      },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap",
-      },
       {
         rel: "stylesheet",
         href: appCss,
