@@ -2,8 +2,20 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { Provider } from "@/data/services";
 import { apiEnabled, bookService, payService } from "@/lib/api";
+import { useAuth, type PaymentMethod } from "@/lib/auth";
 
-type Stage = "confirm" | "processing" | "success";
+type Stage = "confirm" | "processing" | "success" | "insufficient";
+
+function methodLabel(m: PaymentMethod | undefined): string {
+  if (!m) return "No method on file";
+  if (m.kind === "card") return `${m.brand} •• ${m.last4}`;
+  if (m.kind === "upi") return m.handle;
+  return `Wallet · ₹${m.balance}`;
+}
+function methodIcon(m: PaymentMethod | undefined): string {
+  if (!m) return "⚠️";
+  return m.kind === "card" ? "💳" : m.kind === "upi" ? "🪪" : "👛";
+}
 
 export function PaymentDialog({
   open,
@@ -17,6 +29,8 @@ export function PaymentDialog({
   onClose: () => void;
 }) {
   const [stage, setStage] = useState<Stage>("confirm");
+  const { user, chargeWallet } = useAuth();
+  const method = user?.methods.find((m) => m.id === user.defaultMethodId) ?? user?.methods[0];
 
   useEffect(() => {
     if (!open) {
@@ -28,9 +42,22 @@ export function PaymentDialog({
   const [liveNote, setLiveNote] = useState<string | null>(null);
 
   const pay = async () => {
+    if (!provider) return;
+    if (method?.kind === "wallet") {
+      if (method.balance < provider.price) {
+        setStage("insufficient");
+        return;
+      }
+      setStage("processing");
+      chargeWallet(provider.price);
+      await new Promise((r) => setTimeout(r, 700));
+      setLiveNote(`Charged ₹${provider.price} from wallet · new balance ₹${method.balance - provider.price}`);
+      setStage("success");
+      return;
+    }
     setStage("processing");
     setLiveNote(null);
-    if (apiEnabled && provider) {
+    if (apiEnabled) {
       const booked = await bookService({ provider: provider.name, unit: unitLabel });
       const paid = await payService(provider.price, { provider: provider.name });
       if (booked || paid) {
@@ -39,6 +66,7 @@ export function PaymentDialog({
     } else {
       await new Promise((r) => setTimeout(r, 1300));
     }
+    setLiveNote((prev) => prev ?? `Paid via ${methodLabel(method)}`);
     setStage("success");
   };
 
@@ -87,9 +115,17 @@ export function PaymentDialog({
                     <div className="font-semibold mt-0.5">₹{provider.price}</div>
                   </div>
                 </div>
+                <div className="mt-4 flex items-center justify-between glass rounded-xl px-3 py-2.5">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span>{methodIcon(method)}</span>
+                    <span className="font-medium">{methodLabel(method)}</span>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Pay with</span>
+                </div>
                 <button
                   onClick={pay}
-                  className="mt-6 w-full py-3.5 rounded-2xl gradient-aurora text-primary-foreground font-semibold glow-mint hover:scale-[1.02] transition-transform"
+                  disabled={!method}
+                  className="mt-4 w-full py-3.5 rounded-2xl gradient-aurora text-primary-foreground font-semibold glow-mint hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100"
                 >
                   Pay ₹{provider.price} • One tap
                 </button>
@@ -100,6 +136,26 @@ export function PaymentDialog({
                   Cancel
                 </button>
               </>
+            )}
+            {stage === "insufficient" && (
+              <div className="py-8 text-center">
+                <div className="mx-auto h-16 w-16 rounded-full glass-strong flex items-center justify-center text-3xl">
+                  ⚠️
+                </div>
+                <h4 className="mt-5 text-xl font-semibold">Wallet too low</h4>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Need ₹{provider.price}, you have ₹{method?.kind === "wallet" ? method.balance : 0}.
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Top up from your account menu, or switch payment method.
+                </p>
+                <button
+                  onClick={onClose}
+                  className="mt-6 w-full py-3 rounded-2xl glass-strong font-medium hover:bg-white/10 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             )}
             {stage === "processing" && (
               <div className="py-10 text-center">
