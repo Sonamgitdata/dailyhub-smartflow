@@ -5,6 +5,7 @@ import { AuroraBackdrop } from "@/components/AuroraBackdrop";
 import { ServiceCard } from "@/components/ServiceCard";
 import { PreferencePicker, PREF_HINTS } from "@/components/PreferencePicker";
 import { PaymentDialog } from "@/components/PaymentDialog";
+import { AccountMenu } from "@/components/AccountMenu";
 import {
   rankProviders,
   SERVICES,
@@ -56,9 +57,12 @@ function Dashboard() {
           </div>
           <div className="font-display font-semibold text-lg tracking-tight">DailyHub</div>
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-          <span className={`h-2 w-2 rounded-full ${apiEnabled ? "bg-primary animate-pulse-glow" : "bg-muted-foreground/40"}`} />
-          {apiEnabled ? "Flask API connected" : "AI engine online · mock mode"}
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+            <span className={`h-2 w-2 rounded-full ${apiEnabled ? "bg-primary animate-pulse-glow" : "bg-muted-foreground/40"}`} />
+            {apiEnabled ? "Flask API connected" : "AI engine online · mock mode"}
+          </div>
+          <AccountMenu />
         </div>
       </header>
 
