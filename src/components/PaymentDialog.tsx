@@ -115,9 +115,17 @@ export function PaymentDialog({
                     <div className="font-semibold mt-0.5">₹{provider.price}</div>
                   </div>
                 </div>
+                <div className="mt-4 flex items-center justify-between glass rounded-xl px-3 py-2.5">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span>{methodIcon(method)}</span>
+                    <span className="font-medium">{methodLabel(method)}</span>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Pay with</span>
+                </div>
                 <button
                   onClick={pay}
-                  className="mt-6 w-full py-3.5 rounded-2xl gradient-aurora text-primary-foreground font-semibold glow-mint hover:scale-[1.02] transition-transform"
+                  disabled={!method}
+                  className="mt-4 w-full py-3.5 rounded-2xl gradient-aurora text-primary-foreground font-semibold glow-mint hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100"
                 >
                   Pay ₹{provider.price} • One tap
                 </button>
@@ -128,6 +136,26 @@ export function PaymentDialog({
                   Cancel
                 </button>
               </>
+            )}
+            {stage === "insufficient" && (
+              <div className="py-8 text-center">
+                <div className="mx-auto h-16 w-16 rounded-full glass-strong flex items-center justify-center text-3xl">
+                  ⚠️
+                </div>
+                <h4 className="mt-5 text-xl font-semibold">Wallet too low</h4>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Need ₹{provider.price}, you have ₹{method?.kind === "wallet" ? method.balance : 0}.
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Top up from your account menu, or switch payment method.
+                </p>
+                <button
+                  onClick={onClose}
+                  className="mt-6 w-full py-3 rounded-2xl glass-strong font-medium hover:bg-white/10 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             )}
             {stage === "processing" && (
               <div className="py-10 text-center">
