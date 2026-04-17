@@ -12,6 +12,7 @@ import {
   type Preference,
   type Provider,
 } from "@/data/services";
+import { apiEnabled } from "@/lib/api";
 
 export const Route = createFileRoute("/")({
   component: Dashboard,
@@ -56,8 +57,8 @@ function Dashboard() {
           <div className="font-display font-semibold text-lg tracking-tight">DailyHub</div>
         </div>
         <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="h-2 w-2 rounded-full bg-primary animate-pulse-glow" />
-          AI engine online
+          <span className={`h-2 w-2 rounded-full ${apiEnabled ? "bg-primary animate-pulse-glow" : "bg-muted-foreground/40"}`} />
+          {apiEnabled ? "Flask API connected" : "AI engine online · mock mode"}
         </div>
       </header>
 

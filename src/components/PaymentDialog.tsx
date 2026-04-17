@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { Provider } from "@/data/services";
+import { apiEnabled, bookService, payService } from "@/lib/api";
 
 type Stage = "confirm" | "processing" | "success";
 
@@ -24,9 +25,21 @@ export function PaymentDialog({
     }
   }, [open]);
 
-  const pay = () => {
+  const [liveNote, setLiveNote] = useState<string | null>(null);
+
+  const pay = async () => {
     setStage("processing");
-    setTimeout(() => setStage("success"), 1300);
+    setLiveNote(null);
+    if (apiEnabled && provider) {
+      const booked = await bookService({ provider: provider.name, unit: unitLabel });
+      const paid = await payService(provider.price, { provider: provider.name });
+      if (booked || paid) {
+        setLiveNote(paid?.message ?? booked?.message ?? "Confirmed via Flask API");
+      }
+    } else {
+      await new Promise((r) => setTimeout(r, 1300));
+    }
+    setStage("success");
   };
 
   return (
@@ -112,6 +125,9 @@ export function PaymentDialog({
                 <p className="mt-1 text-sm text-muted-foreground">
                   {provider.name} • ₹{provider.price}
                 </p>
+                {liveNote && (
+                  <p className="mt-2 text-xs text-primary">{liveNote}</p>
+                )}
                 <button
                   onClick={onClose}
                   className="mt-6 w-full py-3 rounded-2xl glass-strong font-medium hover:bg-white/10 transition-colors"

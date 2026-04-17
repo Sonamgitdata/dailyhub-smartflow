@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AuroraBackdrop } from "@/components/AuroraBackdrop";
 import { PreferencePicker, PREF_HINTS } from "@/components/PreferencePicker";
 import { ProviderRow } from "@/components/ProviderRow";
@@ -12,6 +12,7 @@ import {
   type Provider,
   type ServiceKey,
 } from "@/data/services";
+import { apiEnabled, fetchProviders } from "@/lib/api";
 
 const VALID: ServiceKey[] = ["transport", "food", "healthcare", "home", "payments"];
 
@@ -51,8 +52,24 @@ function ServiceDetail() {
   const cfg = SERVICES[serviceKey as ServiceKey];
   const [pref, setPref] = useState<Preference>("best");
   const [selected, setSelected] = useState<Provider | null>(null);
+  const [providers, setProviders] = useState<Provider[]>(cfg.providers);
+  const [live, setLive] = useState(false);
 
-  const ranked = useMemo(() => rankProviders(cfg.providers, pref), [cfg, pref]);
+  useEffect(() => {
+    let cancelled = false;
+    setProviders(cfg.providers);
+    setLive(false);
+    fetchProviders(cfg.key).then((res) => {
+      if (cancelled) return;
+      setProviders(res.providers);
+      setLive(res.live);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [cfg]);
+
+  const ranked = useMemo(() => rankProviders(providers, pref), [providers, pref]);
 
   return (
     <div className="min-h-screen relative">
@@ -101,8 +118,19 @@ function ServiceDetail() {
       {/* Comparison list */}
       <section className="relative z-10 px-5 sm:px-8 lg:px-12 pb-16">
         <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-sm uppercase tracking-widest text-muted-foreground">
-            Compare {cfg.providers.length} providers
+          <h2 className="text-sm uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            Compare {ranked.length} providers
+            {live && (
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary normal-case tracking-normal">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                Live · Flask API
+              </span>
+            )}
+            {!live && apiEnabled && (
+              <span className="text-[10px] text-muted-foreground normal-case tracking-normal">
+                (API offline — using mock)
+              </span>
+            )}
           </h2>
           <span className="text-xs text-muted-foreground">
             Ranked by AI · {pref}
