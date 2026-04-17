@@ -2,8 +2,20 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { Provider } from "@/data/services";
 import { apiEnabled, bookService, payService } from "@/lib/api";
+import { useAuth, type PaymentMethod } from "@/lib/auth";
 
-type Stage = "confirm" | "processing" | "success";
+type Stage = "confirm" | "processing" | "success" | "insufficient";
+
+function methodLabel(m: PaymentMethod | undefined): string {
+  if (!m) return "No method on file";
+  if (m.kind === "card") return `${m.brand} •• ${m.last4}`;
+  if (m.kind === "upi") return m.handle;
+  return `Wallet · ₹${m.balance}`;
+}
+function methodIcon(m: PaymentMethod | undefined): string {
+  if (!m) return "⚠️";
+  return m.kind === "card" ? "💳" : m.kind === "upi" ? "🪪" : "👛";
+}
 
 export function PaymentDialog({
   open,
@@ -17,6 +29,8 @@ export function PaymentDialog({
   onClose: () => void;
 }) {
   const [stage, setStage] = useState<Stage>("confirm");
+  const { user, chargeWallet } = useAuth();
+  const method = user?.methods.find((m) => m.id === user.defaultMethodId) ?? user?.methods[0];
 
   useEffect(() => {
     if (!open) {
@@ -28,9 +42,22 @@ export function PaymentDialog({
   const [liveNote, setLiveNote] = useState<string | null>(null);
 
   const pay = async () => {
+    if (!provider) return;
+    if (method?.kind === "wallet") {
+      if (method.balance < provider.price) {
+        setStage("insufficient");
+        return;
+      }
+      setStage("processing");
+      chargeWallet(provider.price);
+      await new Promise((r) => setTimeout(r, 700));
+      setLiveNote(`Charged ₹${provider.price} from wallet · new balance ₹${method.balance - provider.price}`);
+      setStage("success");
+      return;
+    }
     setStage("processing");
     setLiveNote(null);
-    if (apiEnabled && provider) {
+    if (apiEnabled) {
       const booked = await bookService({ provider: provider.name, unit: unitLabel });
       const paid = await payService(provider.price, { provider: provider.name });
       if (booked || paid) {
@@ -39,6 +66,7 @@ export function PaymentDialog({
     } else {
       await new Promise((r) => setTimeout(r, 1300));
     }
+    setLiveNote((prev) => prev ?? `Paid via ${methodLabel(method)}`);
     setStage("success");
   };
 
