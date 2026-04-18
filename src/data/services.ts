@@ -103,30 +103,48 @@ export const SERVICE_LIST: ServiceKey[] = ["transport", "food", "healthcare", "h
 
 export type Preference = "cheap" | "fast" | "best";
 
+/**
+ * Weighted scoring mirroring the Python `Recommend_AI.py` reference:
+ *   score = w_rating * rating  -  w_price * price  -  w_time * time
+ *
+ * Prices and ETAs are normalized to 0..1 across the candidate set so the
+ * subtraction stays meaningful regardless of currency or duration scale.
+ */
+export function calculateScore(
+  item: { price: number; etaMinutes: number; rating: number },
+  pref: Preference,
+  norms: { maxPrice: number; maxEta: number },
+): number {
+  const weights: Record<Preference, { rating: number; price: number; time: number }> = {
+    cheap: { rating: 0.3, price: 0.5, time: 0.2 },
+    fast: { rating: 0.3, price: 0.2, time: 0.5 },
+    best: { rating: 0.6, price: 0.2, time: 0.2 },
+  };
+  const w = weights[pref];
+
+  const ratingNorm = item.rating / 5; // 0..1
+  const priceNorm = norms.maxPrice ? item.price / norms.maxPrice : 0;
+  const timeNorm = norms.maxEta ? item.etaMinutes / norms.maxEta : 0;
+
+  return w.rating * ratingNorm - w.price * priceNorm - w.time * timeNorm;
+}
+
 /** AI-style recommendation: scores providers based on user preference. */
 export function rankProviders(providers: Provider[], pref: Preference): Provider[] {
   const maxPrice = Math.max(...providers.map((p) => p.price));
   const maxEta = Math.max(...providers.map((p) => p.etaMinutes));
 
-  const weights: Record<Preference, { price: number; eta: number; rating: number }> = {
-    cheap: { price: 0.6, eta: 0.15, rating: 0.25 },
-    fast: { price: 0.15, eta: 0.6, rating: 0.25 },
-    best: { price: 0.2, eta: 0.2, rating: 0.6 },
-  };
-
-  const w = weights[pref];
-
   return [...providers]
-    .map((p) => {
-      const priceScore = 1 - p.price / maxPrice;
-      const etaScore = 1 - p.etaMinutes / maxEta;
-      const ratingScore = p.rating / 5;
-      const score = priceScore * w.price + etaScore * w.eta + ratingScore * w.rating;
-      return { ...p, _score: score };
-    })
+    .map((p) => ({ ...p, _score: calculateScore(p, pref, { maxPrice, maxEta }) }))
     .sort((a, b) => b._score - a._score)
     .map(({ _score, ...p }, i) => ({
       ...p,
       tag: i === 0 ? "Best Choice" : undefined,
     }));
+}
+
+/** Single best pick — mirrors Python `recommend_ai(options, preference)`. */
+export function recommendAi(providers: Provider[], pref: Preference): Provider | null {
+  const ranked = rankProviders(providers, pref);
+  return ranked[0] ?? null;
 }
