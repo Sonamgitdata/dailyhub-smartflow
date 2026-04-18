@@ -162,7 +162,7 @@ function Dashboard() {
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {topPicks.map(({ cfg, best }, i) => (
+          {topPicks.map(({ cfg, best, source }, i) => (
             <motion.div
               key={cfg.key}
               layout
@@ -175,7 +175,7 @@ function Dashboard() {
               <div className="flex items-center justify-between">
                 <span className="text-2xl">{cfg.emoji}</span>
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full gradient-aurora text-primary-foreground">
-                  Best
+                  {source === "api" ? "AI · Live" : "Best"}
                 </span>
               </div>
               <div className="mt-3 font-semibold">{best.name}</div>
