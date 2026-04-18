@@ -9,6 +9,7 @@
 import { SERVICES, type Preference, type Provider, type ServiceKey } from "@/data/services";
 
 const BASE = (import.meta.env.VITE_DAILYHUB_API as string | undefined)?.replace(/\/$/, "") ?? "";
+const API_KEY = (import.meta.env.VITE_DAILYHUB_API_KEY as string | undefined) ?? "";
 
 export const apiEnabled = Boolean(BASE);
 
