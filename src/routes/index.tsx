@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AuroraBackdrop } from "@/components/AuroraBackdrop";
 import { ServiceCard } from "@/components/ServiceCard";
 import { PreferencePicker, PREF_HINTS } from "@/components/PreferencePicker";
@@ -12,29 +12,75 @@ import {
   SERVICE_LIST,
   type Preference,
   type Provider,
+  type ServiceKey,
 } from "@/data/services";
-import { apiEnabled } from "@/lib/api";
+import { apiEnabled, fetchRecommendation } from "@/lib/api";
 
 export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
+interface TopPick {
+  cfg: (typeof SERVICES)[ServiceKey];
+  best: Provider;
+  source: "api" | "local";
+}
+
 function Dashboard() {
   const [pref, setPref] = useState<Preference>("best");
   const [combo, setCombo] = useState<Provider | null>(null);
+  const [apiPicks, setApiPicks] = useState<{
+    food: Provider | null;
+    transport: Provider | null;
+  }>({ food: null, transport: null });
 
-  const topPicks = useMemo(() => {
+  // Ask the Flask /recommend endpoint for AI picks whenever preference changes.
+  useEffect(() => {
+    let cancelled = false;
+    if (!apiEnabled) {
+      setApiPicks({ food: null, transport: null });
+      return;
+    }
+    fetchRecommendation(pref).then((res) => {
+      if (cancelled || !res) return;
+      const toProvider = (
+        item: { id: number | string; name: string; price: number; time: number; rating: number },
+        prefix: string,
+      ): Provider => ({
+        id: `${prefix}-${item.id}`,
+        name: item.name,
+        price: Math.round(item.price * 80),
+        etaMinutes: item.time,
+        rating: item.rating,
+        meta: "Live · Flask /recommend",
+        tag: "Best Choice",
+      });
+      setApiPicks({
+        food: res.recommended_food ? toProvider(res.recommended_food, "food") : null,
+        transport: res.recommended_transport
+          ? toProvider(res.recommended_transport, "transport")
+          : null,
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pref]);
+
+  const topPicks: TopPick[] = useMemo(() => {
     return SERVICE_LIST.slice(0, 3).map((key) => {
       const cfg = SERVICES[key];
+      const apiPick = key === "food" ? apiPicks.food : key === "transport" ? apiPicks.transport : null;
+      if (apiPick) return { cfg, best: apiPick, source: "api" as const };
       const ranked = rankProviders(cfg.providers, pref);
-      return { cfg, best: ranked[0] };
+      return { cfg, best: ranked[0], source: "local" as const };
     });
-  }, [pref]);
+  }, [pref, apiPicks]);
 
   const handleCombo = () => {
     // Combine top transport + top food picks into one "combo" payment
-    const ride = rankProviders(SERVICES.transport.providers, pref)[0];
-    const food = rankProviders(SERVICES.food.providers, pref)[0];
+    const ride = apiPicks.transport ?? rankProviders(SERVICES.transport.providers, pref)[0];
+    const food = apiPicks.food ?? rankProviders(SERVICES.food.providers, pref)[0];
     setCombo({
       id: "combo-1",
       name: `${ride.name} + ${food.name}`,
