@@ -151,6 +151,13 @@ function Dashboard() {
         </motion.div>
       </section>
 
+      {/* Personalized best offer */}
+      <section className="relative z-10 px-5 sm:px-8 lg:px-12 pb-8">
+        <BestOfferBanner
+          onPick={(provider, serviceKey) => setOfferPick({ provider, serviceKey })}
+        />
+      </section>
+
       {/* Top picks strip */}
       <section className="relative z-10 px-5 sm:px-8 lg:px-12 pb-8">
         <div className="flex items-baseline justify-between mb-4">
