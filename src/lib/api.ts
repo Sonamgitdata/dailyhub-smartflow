@@ -35,7 +35,11 @@ async function safeFetch<T>(path: string, init?: RequestInit, timeoutMs = 4000):
     const res = await fetch(`${BASE}${path}`, {
       ...init,
       signal: ctrl.signal,
-      headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+      headers: {
+        "Content-Type": "application/json",
+        ...(API_KEY ? { "X-Api-Key": API_KEY } : {}),
+        ...(init?.headers ?? {}),
+      },
     });
     clearTimeout(t);
     if (!res.ok) return null;
