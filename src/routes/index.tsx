@@ -225,7 +225,17 @@ function Dashboard() {
         open={!!combo}
         provider={combo}
         unitLabel="combo"
+        serviceKey="combo"
+        preference={pref}
         onClose={() => setCombo(null)}
+      />
+      <PaymentDialog
+        open={!!offerPick}
+        provider={offerPick?.provider ?? null}
+        unitLabel={offerPick ? SERVICES[offerPick.serviceKey].unitLabel : "offer"}
+        serviceKey={offerPick?.serviceKey}
+        preference={pref}
+        onClose={() => setOfferPick(null)}
       />
     </div>
   );
