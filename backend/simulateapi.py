@@ -1,6 +1,26 @@
+import os
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+
+# ---------------- AUTH ---------------- #
+# Shared-secret API key check. Set API_KEY in the environment to enable.
+# When unset (e.g. local dev), auth is skipped so the demo keeps working.
+API_KEY = os.environ.get("API_KEY")
+# Endpoints that never require auth (health check + safe public reads).
+_PUBLIC_PATHS = {"/", "/food", "/transport", "/food/compare"}
+
+
+@app.before_request
+def require_api_key():
+    if not API_KEY:
+        return  # auth disabled in local/demo mode
+    if request.method == "OPTIONS":
+        return  # let CORS preflight through
+    if request.path in _PUBLIC_PATHS:
+        return
+    if request.headers.get("X-Api-Key") != API_KEY:
+        return jsonify({"error": "Unauthorized"}), 401
 
 # ---------------- MOCK DATA ---------------- #
 
@@ -102,4 +122,5 @@ def make_payment():
 # ---------------- RUN ---------------- #
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug_mode)
