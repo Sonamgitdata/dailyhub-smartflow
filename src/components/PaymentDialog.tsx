@@ -22,11 +22,15 @@ export function PaymentDialog({
   open,
   provider,
   unitLabel,
+  serviceKey,
+  preference = "best",
   onClose,
 }: {
   open: boolean;
   provider: Provider | null;
   unitLabel: string;
+  serviceKey?: ServiceKey | "combo";
+  preference?: Preference;
   onClose: () => void;
 }) {
   const [stage, setStage] = useState<Stage>("confirm");
@@ -42,6 +46,17 @@ export function PaymentDialog({
 
   const [liveNote, setLiveNote] = useState<string | null>(null);
 
+  const recordHistory = () => {
+    if (!user || !provider) return;
+    logBooking({
+      userId: user.id,
+      serviceKey: serviceKey ?? "combo",
+      providerName: provider.name,
+      price: provider.price,
+      preference,
+    });
+  };
+
   const pay = async () => {
     if (!provider) return;
     if (method?.kind === "wallet") {
@@ -53,6 +68,7 @@ export function PaymentDialog({
       chargeWallet(provider.price);
       await new Promise((r) => setTimeout(r, 700));
       setLiveNote(`Charged ₹${provider.price} from wallet · new balance ₹${method.balance - provider.price}`);
+      recordHistory();
       setStage("success");
       return;
     }
@@ -68,6 +84,7 @@ export function PaymentDialog({
       await new Promise((r) => setTimeout(r, 1300));
     }
     setLiveNote((prev) => prev ?? `Paid via ${methodLabel(method)}`);
+    recordHistory();
     setStage("success");
   };
 
