@@ -18,13 +18,28 @@ transport_data = [
 
 # ---------------- HELPER FUNCTION ---------------- #
 
-def recommend(options, preference):
+def calculate_score(item, preference):
+    w_rating, w_price, w_time = 0.5, 0.3, 0.2
     if preference == "cheap":
-        return sorted(options, key=lambda x: x["price"])[0]
+        w_rating, w_price, w_time = 0.3, 0.5, 0.2
     elif preference == "fast":
-        return sorted(options, key=lambda x: x["time"])[0]
-    else:  # best
-        return sorted(options, key=lambda x: x["rating"], reverse=True)[0]
+        w_rating, w_price, w_time = 0.3, 0.2, 0.5
+    elif preference == "best":
+        w_rating, w_price, w_time = 0.6, 0.2, 0.2
+    return (
+        w_rating * item["rating"]
+        - w_price * item["price"]
+        - w_time * item["time"]
+    )
+
+
+def recommend_ai(options, preference):
+    return max(options, key=lambda x: calculate_score(x, preference))
+
+
+# Backwards-compatible alias
+def recommend(options, preference):
+    return recommend_ai(options, preference)
 
 # ---------------- ROUTES ---------------- #
 
