@@ -66,15 +66,16 @@ def compare_food():
 # 🤖 AI Recommendation
 @app.route('/recommend', methods=['POST'])
 def get_recommendation():
-    data = request.json
+    data = request.json or {}
     preference = data.get("preference", "best")
 
-    best_food = recommend(food_data, preference)
-    best_transport = recommend(transport_data, preference)
+    best_food = recommend_ai(food_data, preference)
+    best_transport = recommend_ai(transport_data, preference)
 
     return jsonify({
+        "preference": preference,
         "recommended_food": best_food,
-        "recommended_transport": best_transport
+        "recommended_transport": best_transport,
     })
 
 # 📦 Simulate booking
