@@ -6,6 +6,7 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { PreferencePicker, PREF_HINTS } from "@/components/PreferencePicker";
 import { PaymentDialog } from "@/components/PaymentDialog";
 import { AccountMenu } from "@/components/AccountMenu";
+import { BestOfferBanner } from "@/components/BestOfferBanner";
 import {
   rankProviders,
   SERVICES,
