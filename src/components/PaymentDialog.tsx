@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import type { Provider } from "@/data/services";
+import type { Preference, Provider, ServiceKey } from "@/data/services";
 import { apiEnabled, bookService, payService } from "@/lib/api";
 import { useAuth, type PaymentMethod } from "@/lib/auth";
+import { logBooking } from "@/lib/history";
 
 type Stage = "confirm" | "processing" | "success" | "insufficient";
 
