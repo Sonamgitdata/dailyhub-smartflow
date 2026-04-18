@@ -153,6 +153,8 @@ function ServiceDetail() {
         open={!!selected}
         provider={selected}
         unitLabel={cfg.unitLabel}
+        serviceKey={cfg.key}
+        preference={pref}
         onClose={() => setSelected(null)}
       />
     </div>

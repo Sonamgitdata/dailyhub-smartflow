@@ -6,6 +6,7 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { PreferencePicker, PREF_HINTS } from "@/components/PreferencePicker";
 import { PaymentDialog } from "@/components/PaymentDialog";
 import { AccountMenu } from "@/components/AccountMenu";
+import { BestOfferBanner } from "@/components/BestOfferBanner";
 import {
   rankProviders,
   SERVICES,
@@ -29,6 +30,9 @@ interface TopPick {
 function Dashboard() {
   const [pref, setPref] = useState<Preference>("best");
   const [combo, setCombo] = useState<Provider | null>(null);
+  const [offerPick, setOfferPick] = useState<{ provider: Provider; serviceKey: ServiceKey } | null>(
+    null,
+  );
   const [apiPicks, setApiPicks] = useState<{
     food: Provider | null;
     transport: Provider | null;
@@ -147,6 +151,13 @@ function Dashboard() {
         </motion.div>
       </section>
 
+      {/* Personalized best offer */}
+      <section className="relative z-10 px-5 sm:px-8 lg:px-12 pb-8">
+        <BestOfferBanner
+          onPick={(provider, serviceKey) => setOfferPick({ provider, serviceKey })}
+        />
+      </section>
+
       {/* Top picks strip */}
       <section className="relative z-10 px-5 sm:px-8 lg:px-12 pb-8">
         <div className="flex items-baseline justify-between mb-4">
@@ -214,7 +225,17 @@ function Dashboard() {
         open={!!combo}
         provider={combo}
         unitLabel="combo"
+        serviceKey="combo"
+        preference={pref}
         onClose={() => setCombo(null)}
+      />
+      <PaymentDialog
+        open={!!offerPick}
+        provider={offerPick?.provider ?? null}
+        unitLabel={offerPick ? SERVICES[offerPick.serviceKey].unitLabel : "offer"}
+        serviceKey={offerPick?.serviceKey}
+        preference={pref}
+        onClose={() => setOfferPick(null)}
       />
     </div>
   );
