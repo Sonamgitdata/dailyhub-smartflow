@@ -30,6 +30,9 @@ interface TopPick {
 function Dashboard() {
   const [pref, setPref] = useState<Preference>("best");
   const [combo, setCombo] = useState<Provider | null>(null);
+  const [offerPick, setOfferPick] = useState<{ provider: Provider; serviceKey: ServiceKey } | null>(
+    null,
+  );
   const [apiPicks, setApiPicks] = useState<{
     food: Provider | null;
     transport: Provider | null;
