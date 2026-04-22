@@ -80,7 +80,7 @@ Future Vision:
  Voice-enabled assistant
  Predictive AI (plans your day automatically)
  Smart home & IoT integration
-
+https://lovable.dev/projects/33333b4b-c8aa-42d2-a6e4-c9def263eaee
 
 
 
